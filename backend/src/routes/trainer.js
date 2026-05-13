@@ -116,6 +116,28 @@ router.put('/courses/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
+// POST /api/trainer/courses/:id/exercises — add exercise to existing course
+router.post('/courses/:id/exercises', async (req, res) => {
+  const { machineID, exerciseName, sets, reps, weightKg, frequency, notes, sortOrder } = req.body
+  try {
+    const pool = await getPool()
+    const result = await pool.request()
+      .input('CourseID',     sql.Int,        req.params.id)
+      .input('MachineID',    sql.Int,        machineID)
+      .input('ExerciseName', sql.NVarChar,   exerciseName)
+      .input('Sets',         sql.Int,        sets)
+      .input('Reps',         sql.Int,        reps)
+      .input('WeightKg',     sql.Decimal(6,2), weightKg || null)
+      .input('Frequency',    sql.NVarChar,   frequency || null)
+      .input('Notes',        sql.NVarChar,   notes || null)
+      .input('SortOrder',    sql.Int,        sortOrder || 0)
+      .query(`INSERT INTO CourseExercises (CourseID,MachineID,ExerciseName,Sets,Reps,WeightKg,Frequency,Notes,SortOrder)
+              OUTPUT INSERTED.ExerciseID
+              VALUES (@CourseID,@MachineID,@ExerciseName,@Sets,@Reps,@WeightKg,@Frequency,@Notes,@SortOrder)`)
+    res.status(201).json({ exerciseId: result.recordset[0].ExerciseID })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
 // DELETE /api/trainer/courses/:id/exercises/:exId
 router.delete('/courses/:id/exercises/:exId', async (req, res) => {
   try {

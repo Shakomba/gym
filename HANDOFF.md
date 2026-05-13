@@ -1,65 +1,59 @@
 # Halabja Gym Management System — Developer Handoff
 
-**Date:** 2026-05-14  
-**Status:** Running in Docker  
-**Live URL:** http://localhost:3000
+**Last updated:** 2026-05-14  
+**Status:** Running in Docker on DigitalOcean  
+**Live URL:** https://redeen.shakomba.org  
+**Server:** `ssh -i ~/.ssh/attendify_prod root@159.223.22.87` → `/opt/halabja-gym/`
 
 ---
 
 ## 1. Project Summary
 
-A full-stack gym management platform for **Halabja Gym**. Built for a Database Systems course to demonstrate advanced SQL Server features. Three user roles: **Admin**, **Trainer**, **Member**. Members submit a request and are manually approved by the admin after paying in cash at the gym.
+Full-stack gym management platform for **Halabja Gym**. Built for a Database Systems course showcasing advanced SQL Server features. Three roles: **Admin**, **Trainer**, **Member**. Members register and await manual approval after paying in cash at the gym.
 
 ---
 
 ## 2. Repository Layout
 
 ```
-d:\New folder (2)\
-├── docker-compose.yml          ← Runs everything: DB + API + frontend
+├── docker-compose.yml
 ├── database/
-│   ├── schema.sql              ← Full SQL Server schema, SPs, triggers, views, seed data
-│   └── init.sh                 ← Waits for SQL Server, then runs schema.sql (runs in db-init container)
-├── backend/                    ← Node.js / Express API
-│   ├── server.js               ← Entry point, mounts all routes
-│   ├── .env                    ← DB credentials + JWT secret (not committed in real projects)
+│   ├── schema.sql          ← Full schema: tables, SPs, triggers, views, seed data
+│   └── init.sh             ← Waits for SQL Server, runs schema.sql (db-init container)
+├── backend/
+│   ├── server.js           ← Entry point, mounts all routes under /api
 │   ├── src/
-│   │   ├── db/pool.js          ← mssql connection pool with retry logic (10 attempts × 4s)
-│   │   ├── middleware/auth.js  ← JWT verify + role guard (authenticate, requireRole)
+│   │   ├── db/pool.js      ← mssql connection pool, retries 10× with 4s gaps
+│   │   ├── middleware/auth.js  ← JWT verify + requireRole guard
 │   │   └── routes/
-│   │       ├── auth.js         ← POST /login, POST /register
-│   │       ├── admin.js        ← Stats, member requests, approve/reject, attendance, trainers
-│   │       ├── trainer.js      ← Trainer members, workout courses CRUD
-│   │       ├── members.js      ← Member profile, courses, attendance (own data)
+│   │       ├── auth.js         ← POST /login, POST /register (+ MemberMedicalInfo insert)
+│   │       ├── admin.js        ← Stats, members, approve/reject, attendance check-in/out
+│   │       ├── trainer.js      ← Trainer members, courses CRUD, per-course exercise CRUD
+│   │       ├── members.js      ← Member profile, courses, own attendance
 │   │       └── machines.js     ← Machine inventory + maintenance logs
-└── frontend/                   ← React 19 / Vite 8 / Tailwind CSS v4
-    ├── nginx.conf              ← Proxies /api/* to backend:5000
+└── frontend/
+    ├── nginx.conf          ← 80→443 redirect, SSL termination, proxies /api/* to backend:5000
     ├── src/
-    │   ├── index.css           ← Design tokens (CSS vars), @layer base/components/utilities
-    │   ├── App.jsx             ← React Router tree + role-based guards
-    │   ├── api/client.js       ← Axios instance — auto-attaches JWT, handles 401 redirect
-    │   ├── context/AuthContext.jsx  ← login/register/logout, user in localStorage
+    │   ├── index.css       ← Design tokens (CSS custom properties), component classes
+    │   ├── App.jsx         ← React Router tree, role guards (RequireRole)
+    │   ├── api/client.js   ← Axios: auto-attaches JWT, 401 → redirect to /login
+    │   ├── context/AuthContext.jsx
     │   ├── components/
-    │   │   ├── layout/
-    │   │   │   ├── AppLayout.jsx   ← Protected wrapper (redirects if no user)
-    │   │   │   └── Sidebar.jsx     ← Role-aware nav, sign-out
-    │   │   └── ui/
-    │   │       ├── StatCard.jsx    ← Big-number stat tile
-    │   │       ├── StatusBadge.jsx ← Pending / Active / Inactive / Rejected badge
-    │   │       ├── Modal.jsx       ← Accessible overlay modal
-    │   │       └── Toast.jsx       ← Context-based toast notifications
+    │   │   ├── layout/AppLayout.jsx  ← Auth wrapper
+    │   │   ├── layout/Sidebar.jsx    ← Role-aware nav
+    │   │   └── ui/                   ← Modal, Toast, StatCard, StatusBadge
     │   └── pages/
     │       ├── Login.jsx
-    │       ├── Register.jsx        ← 4-step multi-page form
+    │       ├── Register.jsx        ← 4-step form (account → personal → health → review)
     │       ├── Machines.jsx        ← Shared by all roles
     │       ├── admin/
     │       │   ├── AdminDashboard.jsx
-    │       │   ├── MemberRequests.jsx  ← Approve / Reject workflow
-    │       │   └── AttendanceAdmin.jsx ← Manual check-in
+    │       │   ├── MemberRequests.jsx  ← Members list + approve/reject workflow
+    │       │   └── AttendanceAdmin.jsx ← Manual check-in + check-out per session
     │       ├── trainer/
     │       │   ├── TrainerDashboard.jsx
     │       │   ├── TrainerMembers.jsx
-    │       │   └── WorkoutCourses.jsx  ← Course builder with exercise editor
+    │       │   └── WorkoutCourses.jsx  ← Create + edit courses, live exercise add/remove
     │       └── member/
     │           ├── MemberDashboard.jsx
     │           ├── MemberCourses.jsx
@@ -70,33 +64,28 @@ d:\New folder (2)\
 
 ## 3. Running the Project
 
-### Docker (recommended — one command)
+### Docker (recommended)
 
 ```bash
 docker compose up -d
 ```
 
-Startup sequence is fully automated:
-1. `db` — SQL Server 2022 starts, health-checked every 10s
-2. `db-init` — waits for healthy DB, runs `schema.sql` (creates DB + seeds data), exits 0
-3. `backend` — starts after `db-init` completes; retries DB connection up to 10×
-4. `frontend` — nginx serves built React app on port 3000, proxies `/api` to backend
+Startup order is enforced by health checks and `depends_on`:
+1. `db` — SQL Server 2022, health-checked every 10s (up to 15 retries)
+2. `db-init` — runs `schema.sql` once, then exits 0
+3. `backend` — starts after db-init; retries DB connection 10× before giving up
+4. `frontend` — nginx serves built React app on 443 (HTTPS), proxies `/api` to backend
 
 ```bash
-# Stop (keeps DB data)
-docker compose down
-
-# Full reset (wipes DB volume)
-docker compose down -v && docker compose up -d
-
-# Rebuild after code changes
-docker compose build frontend   # or backend
-docker compose up -d --no-deps frontend
+docker compose down               # stop, keep DB volume
+docker compose down -v            # full reset, wipe DB
+docker compose up -d --build      # rebuild and restart all
+docker compose build backend && docker compose up -d --no-deps backend
 ```
 
 ### Without Docker
 
-**Requirements:** Node 20+, SQL Server instance
+Requirements: Node 20+, SQL Server instance
 
 ```bash
 # 1. Run database/schema.sql in SSMS
@@ -104,92 +93,93 @@ docker compose up -d --no-deps frontend
 # 2. Backend
 cd backend
 # Edit .env — set DB_SERVER, DB_PASSWORD
-npm start          # or: npm run dev (uses node --watch)
+npm start          # or: npm run dev
 
 # 3. Frontend
 cd frontend
-npm run dev        # http://localhost:5173  (proxies /api → localhost:5000)
+npm run dev        # http://localhost:5173 — Vite proxies /api → localhost:5000
 ```
 
 ---
 
 ## 4. Environment Variables (`backend/.env`)
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable | Docker value | Description |
+|---|---|---|
 | `PORT` | `5000` | Express port |
-| `JWT_SECRET` | `halabja_gym_super_secret_2024` | **Change in production** |
-| `DB_SERVER` | `localhost` | SQL Server host (use `db` in Docker) |
-| `DB_DATABASE` | `HalabjGymDB` | Database name |
-| `DB_USER` | `sa` | SQL login |
-| `DB_PASSWORD` | `HalabjGym_2024!` | SQL password |
-| `DB_PORT` | `1433` | SQL Server port |
-| `DB_ENCRYPT` | `false` | Set `true` for Azure SQL |
-| `DB_TRUST_SERVER_CERT` | `true` | Set `false` in production with valid cert |
+| `JWT_SECRET` | `halabja_gym_super_secret_2024` | Change in any real deployment |
+| `DB_SERVER` | `db` | `localhost` when running without Docker |
+| `DB_DATABASE` | `HalabjGymDB` | |
+| `DB_USER` | `sa` | |
+| `DB_PASSWORD` | `HalabjGym_2024!` | |
+| `DB_PORT` | `1433` | |
+| `DB_ENCRYPT` | `false` | `true` for Azure SQL |
+| `DB_TRUST_SERVER_CERT` | `true` | `false` if using a CA-signed cert |
 
 ---
 
 ## 5. Demo Accounts
 
 | Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@halabja.gym | `admin123` |
-| Trainer | ahmad@halabja.gym | `trainer123` |
-| Trainer | sara@halabja.gym | `trainer123` |
-| Trainer | dara@halabja.gym | `trainer123` |
-| Member | ali@example.com | `admin123` |
-| Member | nour@example.com | `admin123` |
+|---|---|---|
+| Admin | admin@halabja.gym | admin123 |
+| Trainer | ahmad@halabja.gym | trainer123 |
+| Trainer | sara@halabja.gym | trainer123 |
+| Trainer | dara@halabja.gym | trainer123 |
+| Member | ali@example.com | admin123 |
+| Member | nour@example.com | admin123 |
 
 ---
 
 ## 6. API Routes
 
-All protected routes require `Authorization: Bearer <token>` header.
+All protected routes require `Authorization: Bearer <token>`.
 
 ### Auth — public
 | Method | Path | Description |
-|--------|------|-------------|
+|---|---|---|
 | POST | `/api/auth/login` | Returns JWT + user object |
-| POST | `/api/auth/register` | Creates pending member |
+| POST | `/api/auth/register` | Creates pending member + medical info row |
 
 ### Admin — role: `admin`
 | Method | Path | Description |
-|--------|------|-------------|
+|---|---|---|
 | GET | `/api/admin/stats` | Dashboard counts |
-| GET | `/api/admin/requests` | Pending member requests |
 | GET | `/api/admin/members` | All members with trainer |
 | POST | `/api/admin/approve/:id` | Calls `sp_ApproveMember` (transaction) |
 | POST | `/api/admin/reject/:id` | Calls `sp_RejectMember` |
-| PATCH | `/api/admin/members/:id/trainer` | Assign trainer |
+| PATCH | `/api/admin/members/:id/trainer` | Assign trainer to member |
 | GET | `/api/admin/trainers` | Trainer list + member counts |
 | GET | `/api/admin/attendance` | All attendance records |
 | POST | `/api/admin/attendance/checkin` | Manual check-in |
+| POST | `/api/admin/attendance/checkout/:id` | Record check-out for a session |
 | GET | `/api/admin/logs` | Last 50 system log entries |
 
 ### Trainer — role: `trainer` or `admin`
 | Method | Path | Description |
-|--------|------|-------------|
+|---|---|---|
 | GET | `/api/trainer/stats` | Member/course counts |
 | GET | `/api/trainer/members` | Assigned active members |
 | GET | `/api/trainer/courses` | All courses by this trainer |
 | GET | `/api/trainer/courses/:id` | Course + exercises |
 | POST | `/api/trainer/courses` | Create course with exercises |
 | PUT | `/api/trainer/courses/:id` | Update course metadata |
+| POST | `/api/trainer/courses/:id/exercises` | Add exercise to existing course |
 | DELETE | `/api/trainer/courses/:id/exercises/:exId` | Remove one exercise |
 
 ### Members — role: `member`
 | Method | Path | Description |
-|--------|------|-------------|
+|---|---|---|
 | GET | `/api/members/me` | Own profile + trainer info |
 | PATCH | `/api/members/me` | Update phone/weight/height/goal |
 | GET | `/api/members/me/courses` | Own workout courses |
 | GET | `/api/members/me/courses/:id` | Course with full exercise detail |
-| GET | `/api/members/me/attendance` | Last 30 attendance records |
+| GET | `/api/members/me/attendance` | Own attendance history |
 
 ### Machines — all authenticated roles
 | Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/machines` | All machines + log/course counts |
+|---|---|---|
+| GET | `/api/machines` | All machines |
 | GET | `/api/machines/:id` | Machine + maintenance logs |
 | POST | `/api/machines` | Add machine (admin only) |
 | PUT | `/api/machines/:id` | Update machine (admin only) |
@@ -198,87 +188,69 @@ All protected routes require `Authorization: Bearer <token>` header.
 
 ---
 
-## 7. Database Schema Summary
+## 7. Database
 
-### Tables (11)
+### Tables (13)
 
 | Table | Purpose |
-|-------|---------|
+|---|---|
 | `Admins` | Admin accounts |
 | `Trainers` | Trainer accounts + specialty |
 | `Members` | Member accounts; `Status` ∈ {Pending, Active, Inactive, Rejected} |
-| `MemberMedicalInfo` | 1:1 with Members — health disclosures |
+| `MemberMedicalInfo` | 1:1 with Members — health disclosures, emergency contact |
 | `Machines` | Gym equipment inventory |
 | `MaintenanceLogs` | Service history per machine |
-| `WorkoutCourses` | Programs created by trainers for members |
-| `CourseExercises` | Junction: courses ↔ machines + sets/reps/frequency |
-| `Payments` | Cash-only payment log (enforced by `CHECK (PaymentType = 'Cash')`) |
-| `Attendance` | Check-in/out records |
+| `WorkoutCourses` | Training programs (trainer → member) |
+| `CourseExercises` | Course ↔ machine junction: sets, reps, weight, frequency |
+| `Payments` | Cash-only payment log |
+| `Attendance` | Check-in/out records with method (Manual / QR) |
 | `SystemLogs` | General event log |
-| `AuditTrail` | Weight/height change audit trail |
-| `ArchiveMembers` | Soft-deleted members moved here by trigger |
-
-### Key Constraints
-- `Members.Status` — `CHECK (Status IN ('Pending','Active','Inactive','Rejected'))`
-- `Payments.PaymentType` — `CHECK (PaymentType = 'Cash')`
-- `CourseExercises.Sets/Reps` — `CHECK (Sets > 0)`, `CHECK (Reps > 0)`
-- `Members.Email`, `Machines.SerialNumber` — `UNIQUE`
-- `Members.Status` — `DEFAULT 'Pending'`
-- `Members.JoinDate` — `DEFAULT GETDATE()`
+| `AuditTrail` | Weight/height change history (written by trigger) |
+| `ArchiveMembers` | Soft-deleted members (moved here by INSTEAD OF DELETE trigger) |
 
 ### Stored Procedures
 | Procedure | Description |
-|-----------|-------------|
-| `sp_ApproveMember` | **Transaction-wrapped**: sets Status = Active, logs Cash payment, creates initial attendance record. Rolls back all three if any step fails. |
-| `sp_RejectMember` | Sets Status = Rejected, writes SystemLog entry |
-| `sp_DeleteMachine` | Transaction: removes from CourseExercises, then Machines, writes SystemLog |
+|---|---|
+| `sp_ApproveMember` | Transaction: sets Status=Active, logs Cash payment, creates attendance record. Full rollback on any failure. |
+| `sp_RejectMember` | Sets Status=Rejected, writes SystemLog |
+| `sp_DeleteMachine` | Transaction: removes CourseExercises references, deletes machine, writes SystemLog |
 
 ### Triggers
 | Trigger | Table | Event | Action |
-|---------|-------|-------|--------|
-| `trg_MemberApproved` | Members | AFTER UPDATE | Inserts "Welcome" entry into SystemLogs when Status changes to Active |
-| `trg_MemberBodyAudit` | Members | AFTER UPDATE | Logs old/new Weight and Height values to AuditTrail |
+|---|---|---|---|
+| `trg_MemberApproved` | Members | AFTER UPDATE | Inserts "Welcome" into SystemLogs when Status → Active |
+| `trg_MemberBodyAudit` | Members | AFTER UPDATE | Logs old/new Weight and Height to AuditTrail |
 | `trg_ArchiveMember` | Members | INSTEAD OF DELETE | Copies row to ArchiveMembers before deleting |
 
 ### Views
 | View | Description |
-|------|-------------|
-| `vw_ActiveMemberOverview` | INNER JOIN: members + trainers + active courses |
-| `vw_TrainerWorkload` | GROUP BY: trainer → active member count |
-| `vw_UnusedMachines` | EXISTS subquery: machines not in any active course |
-| `vw_MembersWithoutTrainer` | EXCEPT: active members minus those with a trainer assigned |
+|---|---|
+| `vw_ActiveMemberOverview` | Members + trainers + active course count |
+| `vw_TrainerWorkload` | Trainer → active member count |
+| `vw_UnusedMachines` | Machines not in any active course |
+| `vw_MembersWithoutTrainer` | Active members with no trainer assigned |
 
 ---
 
 ## 8. Frontend Design System
 
-**Fonts (Google Fonts):**
-- `Barlow Condensed 800/900` — display headings, uppercase
-- `Barlow 300–600` — body text
-- `JetBrains Mono 400–700` — data, labels, timestamps
+**Theme:** Dark monochrome brutalist. Zero border radius. Flat borders.
 
-**CSS Variables (in `frontend/src/index.css`):**
-```css
---bg          #080808   page background
---s1          #101010   card surface
---s2          #181818   elevated surface / input bg hover
---s3          #222222   input background
---b1          #2c2c2c   subtle border
---b2          #404040   normal border
---b3          #5c5c5c   strong / hover border
---t1          #eeeeee   primary text
---t2          #888888   secondary text
---t3          #4a4a4a   muted / label text
---inv         #eeeeee   primary button background
---inv-text    #080808   text on primary button
+**Fonts:** Barlow Condensed (headings) · Barlow (body) · JetBrains Mono (data/labels)
+
+**CSS tokens (`index.css`):**
+```
+--bg   #111111    --s1  #1a1a1a    --s2  #222222    --s3  #2c2c2c
+--b0   #252525    --b1  #383838    --b2  #505050    --b3  #6a6a6a
+--t1   #f0f0f0    --t2  #999999    --t3  #5a5a5a
+--inv  #f0f0f0    --inv-text  #111111
 ```
 
-**Reusable CSS classes:**  
+**Reusable classes:**  
 `.card` `.input-base` `.btn-primary` `.btn-secondary` `.btn-danger` `.btn-success`  
 `.table-base` `.section-label` `.skeleton` `.animate-fade-in`
 
-**Custom Tailwind utilities added:**  
-`.font-500` `.font-600` `.font-700` `.font-800` `.font-900` (Tailwind v4 drops bare numeric weights)
+**Font weight utilities** (`.font-500` → `.font-900`) are defined in `@layer utilities` because Tailwind v4 dropped bare numeric weight classes.
 
 ---
 
@@ -290,10 +262,10 @@ POST /api/auth/login
   → returns { token, user: { id, name, email, role } }
 
 Token stored in localStorage
-Axios interceptor attaches it to every request
-401 response → clears storage → redirects to /login
+Axios interceptor attaches it to every request as Bearer token
+401 response → clears storage, redirects to /login
 
-Role routing:
+Role redirect on login:
   admin   → /admin
   trainer → /trainer
   member  → /member
@@ -301,26 +273,33 @@ Role routing:
 
 ---
 
-## 10. Known Gotchas
+## 10. Production Deployment
 
-| Issue | Detail |
-|-------|--------|
-| **SQL Server cold start** | Takes ~20–30s on first `docker compose up`. The `db-init` container waits up to 90s (30 × 3s). Backend also retries 10× with 4s gaps. |
-| **Tailwind v4 layer rule** | Custom CSS classes *must* be inside `@layer components {}`. Classes defined outside layers are dropped by the compiler. |
-| **Font weights** | Tailwind v4 has no `.font-700` utility. Custom `.font-500`–`.font-900` utilities are defined in `@layer utilities` in `index.css`. |
-| **Unlayered `*` reset** | `* { padding: 0 }` outside a layer overrides all Tailwind spacing utilities. The reset is inside `@layer base` to keep specificity correct. |
-| **Cash-only payments** | `CHECK (PaymentType = 'Cash')` is enforced at DB level. The API hardcodes `'Cash'` — no other payment type is accepted by design. |
-| **Password hashes** | Seed data uses real bcrypt hashes: `admin123` → `$2b$10$wXvmn...`, `trainer123` → `$2b$10$PFcW...`. Generated with `bcryptjs` at cost factor 10. |
-| **Docker SA password** | `HalabjGym_2024!` is used for the SQL Server `sa` account in Docker. It meets SQL Server's complexity requirements (upper + lower + digit + special). |
+- **Provider:** DigitalOcean, region fra1 (Frankfurt)
+- **Droplet:** s-2vcpu-4gb, IP 159.223.22.87
+- **Domain:** redeen.shakomba.org — Cloudflare DNS (A record, proxied, SSL mode: Full)
+- **SSL:** Self-signed cert at `/opt/halabja-gym/certs/` — Cloudflare terminates public TLS
+- **Redeploy:** `ssh -i ~/.ssh/attendify_prod root@159.223.22.87` then `cd /opt/halabja-gym && docker compose up -d --build`
 
 ---
 
-## 11. What's Not Implemented
+## 11. Known Gotchas
 
-- Email verification
-- Password reset flow
-- QR-based check-in (schema column exists: `Attendance.Method = 'QR'`)
-- Member medical info CRUD in the UI (table exists in DB, no frontend page)
-- Audit trail viewer (data is written by trigger, no admin UI to read it)
+| Issue | Detail |
+|---|---|
+| SQL Server cold start | Takes 20–30s on first `docker compose up`. Health check runs up to 15× every 10s. Backend retries 10× with 4s gaps. |
+| Tailwind v4 layers | Custom CSS classes must be inside `@layer components {}` or they get dropped. |
+| Font weight utilities | Tailwind v4 has no `.font-700` etc. — defined manually in `@layer utilities`. |
+| Cash-only payments | `CHECK (PaymentType = 'Cash')` at DB level. The API hardcodes `'Cash'`; no other type is accepted by design. |
+| Seed password hashes | `admin123` and `trainer123` are real bcrypt hashes at cost factor 10. |
+
+---
+
+## 12. Not Implemented
+
+- Email verification / password reset
+- QR-based check-in (schema column exists: `Attendance.Method`)
+- Medical info CRUD UI (data is saved during registration, no edit page)
+- Audit trail viewer (data written by trigger, no UI to display it)
+- Pagination (all records loaded at once)
 - Member photo upload
-- Pagination on member/machine lists (all records loaded at once)

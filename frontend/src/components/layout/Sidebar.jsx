@@ -1,14 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
-  Dumbbell, LayoutDashboard, Users, UserCheck,
+  Dumbbell, LayoutDashboard, Users,
   Wrench, ClipboardList, LogOut, Activity
 } from 'lucide-react'
 
 const NAV = {
   admin: [
     { to: '/admin',             icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/admin/requests',    icon: UserCheck,       label: 'Requests' },
     { to: '/admin/members',     icon: Users,           label: 'Members' },
     { to: '/machines',          icon: Wrench,          label: 'Machines' },
     { to: '/admin/attendance',  icon: Activity,        label: 'Attendance' },

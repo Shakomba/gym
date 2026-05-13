@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/client'
 import { useToast } from '../../components/ui/Toast'
-import { UserCheck, Search, RefreshCw } from 'lucide-react'
+import { UserCheck, UserX, Search, RefreshCw } from 'lucide-react'
 
 export default function AttendanceAdmin() {
   const [records, setRecords]   = useState([])
@@ -9,7 +9,8 @@ export default function AttendanceAdmin() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [selectedMember, setSelectedMember] = useState('')
-  const [checkingIn, setCheckingIn] = useState(false)
+  const [checkingIn, setCheckingIn]   = useState(false)
+  const [checkingOut, setCheckingOut] = useState(null)
   const toast = useToast()
 
   const load = async () => {
@@ -31,10 +32,19 @@ export default function AttendanceAdmin() {
     finally { setCheckingIn(false) }
   }
 
+  const checkOut = async (attendanceId) => {
+    setCheckingOut(attendanceId)
+    try {
+      await api.post(`/admin/attendance/checkout/${attendanceId}`)
+      toast('Check-out recorded', 'success'); load()
+    } catch (err) { toast(err.response?.data?.error || 'Failed', 'error') }
+    finally { setCheckingOut(null) }
+  }
+
   const filtered = records.filter(r => r.MemberName?.toLowerCase().includes(search.toLowerCase()))
 
   const dur = (i, o) => {
-    if (!o) return <span style={{ color:'var(--t1)' }}>● Active</span>
+    if (!o) return null
     const m = Math.round((new Date(o) - new Date(i)) / 60000)
     return `${Math.floor(m/60)}h ${m%60}m`
   }
@@ -79,29 +89,51 @@ export default function AttendanceAdmin() {
         {loading
           ? <div className="p-8 text-center text-sm" style={{ color:'var(--t3)' }}>Loading…</div>
           : <table className="table-base">
-              <thead><tr><th>Member</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Method</th></tr></thead>
+              <thead><tr><th>Member</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Method</th><th></th></tr></thead>
               <tbody>
-                {filtered.slice(0,50).map(r => (
-                  <tr key={r.AttendanceID}>
-                    <td>
-                      <div className="font-600 text-sm">{r.MemberName}</div>
-                      <div className="text-[11px]" style={{ fontFamily:'var(--font-mono)', color:'var(--t3)' }}>{r.Email}</div>
-                    </td>
-                    <td className="text-xs" style={{ fontFamily:'var(--font-mono)', color:'var(--t2)' }}>
-                      {new Date(r.CheckInTime).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
-                    </td>
-                    <td className="text-xs" style={{ fontFamily:'var(--font-mono)', color:'var(--t2)' }}>
-                      {r.CheckOutTime ? new Date(r.CheckOutTime).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '—'}
-                    </td>
-                    <td className="text-xs">{dur(r.CheckInTime, r.CheckOutTime)}</td>
-                    <td>
-                      <span className="text-[10px] px-2 py-1 uppercase tracking-wider"
-                        style={{ fontFamily:'var(--font-mono)', color:'var(--t3)', border:'1px solid var(--b1)' }}>
-                        {r.Method}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.slice(0,50).map(r => {
+                  const active = !r.CheckOutTime
+                  return (
+                    <tr key={r.AttendanceID}>
+                      <td>
+                        <div className="font-600 text-sm">{r.MemberName}</div>
+                        <div className="text-[11px]" style={{ fontFamily:'var(--font-mono)', color:'var(--t3)' }}>{r.Email}</div>
+                      </td>
+                      <td className="text-xs" style={{ fontFamily:'var(--font-mono)', color:'var(--t2)' }}>
+                        {new Date(r.CheckInTime).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                      </td>
+                      <td className="text-xs" style={{ fontFamily:'var(--font-mono)', color:'var(--t2)' }}>
+                        {active
+                          ? <span style={{ color:'var(--t1)' }}>● Active</span>
+                          : new Date(r.CheckOutTime).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+                        }
+                      </td>
+                      <td className="text-xs" style={{ fontFamily:'var(--font-mono)' }}>
+                        {dur(r.CheckInTime, r.CheckOutTime) || '—'}
+                      </td>
+                      <td>
+                        <span className="text-[10px] px-2 py-1 uppercase tracking-wider"
+                          style={{ fontFamily:'var(--font-mono)', color:'var(--t3)', border:'1px solid var(--b1)' }}>
+                          {r.Method}
+                        </span>
+                      </td>
+                      <td>
+                        {active && (
+                          <button
+                            onClick={() => checkOut(r.AttendanceID)}
+                            disabled={checkingOut === r.AttendanceID}
+                            className="flex items-center gap-1.5 text-[10px] px-2 py-1 uppercase tracking-wider cursor-pointer transition-colors"
+                            style={{ fontFamily:'var(--font-mono)', color:'var(--t2)', border:'1px solid var(--b2)' }}
+                            onMouseEnter={e => { e.currentTarget.style.background='var(--t1)'; e.currentTarget.style.color='var(--bg)'; e.currentTarget.style.borderColor='var(--t1)' }}
+                            onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--t2)'; e.currentTarget.style.borderColor='var(--b2)' }}>
+                            <UserX size={11} />
+                            {checkingOut === r.AttendanceID ? '…' : 'Check Out'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
         }

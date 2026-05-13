@@ -127,6 +127,19 @@ router.post('/attendance/checkin', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
+// POST /api/admin/attendance/checkout/:id
+router.post('/attendance/checkout/:id', async (req, res) => {
+  try {
+    const pool = await getPool()
+    const result = await pool.request()
+      .input('AttendanceID', sql.Int, req.params.id)
+      .query(`UPDATE Attendance SET CheckOutTime = GETDATE()
+              WHERE AttendanceID = @AttendanceID AND CheckOutTime IS NULL`)
+    if (result.rowsAffected[0] === 0) return res.status(400).json({ error: 'Already checked out or not found' })
+    res.json({ message: 'Check-out recorded' })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
 // GET /api/admin/trainers
 router.get('/trainers', async (req, res) => {
   try {

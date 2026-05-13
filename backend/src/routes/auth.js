@@ -61,7 +61,10 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { name, email, password, phone, gender, fitnessGoal, dateOfBirth, weight, height } = req.body
+  const {
+    name, email, password, phone, gender, fitnessGoal, dateOfBirth, weight, height,
+    medicalConditions, allergies, emergencyContact, emergencyPhone
+  } = req.body
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' })
 
   try {
@@ -83,13 +86,26 @@ router.post('/register', async (req, res) => {
       .input('gender',  sql.NVarChar, gender || null)
       .input('goal',    sql.NVarChar, fitnessGoal || null)
       .input('dob',     sql.Date,     dateOfBirth ? new Date(dateOfBirth) : null)
-      .input('weight',  sql.Decimal(5,2), weight || null)
-      .input('height',  sql.Decimal(5,2), height || null)
+      .input('weight',  sql.Decimal(5, 2), weight ? parseFloat(weight) : null)
+      .input('height',  sql.Decimal(5, 2), height ? parseFloat(height) : null)
       .query(`INSERT INTO Members (MemberName,Email,PasswordHash,Phone,Gender,FitnessGoal,DateOfBirth,Weight,Height)
               OUTPUT INSERTED.MemberID
               VALUES (@name,@email,@hash,@phone,@gender,@goal,@dob,@weight,@height)`)
 
     const memberId = result.recordset[0].MemberID
+
+    // Insert medical info if any health data was provided
+    if (medicalConditions || allergies || emergencyContact || emergencyPhone) {
+      await pool.request()
+        .input('memberId',   sql.Int,       memberId)
+        .input('medical',    sql.NVarChar,  medicalConditions || null)
+        .input('allergies',  sql.NVarChar,  allergies || null)
+        .input('emergency',  sql.NVarChar,  emergencyContact || null)
+        .input('ephone',     sql.NVarChar,  emergencyPhone || null)
+        .query(`INSERT INTO MemberMedicalInfo (MemberID, MedicalConditions, Allergies, EmergencyContact, EmergencyPhone)
+                VALUES (@memberId, @medical, @allergies, @emergency, @ephone)`)
+    }
+
     res.status(201).json({ message: 'Registration submitted. Awaiting admin approval.', memberId })
   } catch (err) {
     console.error(err)

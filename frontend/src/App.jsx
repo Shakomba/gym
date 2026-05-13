@@ -7,7 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 
 import AdminDashboard  from './pages/admin/AdminDashboard'
-import MemberRequests  from './pages/admin/MemberRequests'
+import Members         from './pages/admin/MemberRequests'
 import AttendanceAdmin from './pages/admin/AttendanceAdmin'
 
 import TrainerDashboard from './pages/trainer/TrainerDashboard'
@@ -48,8 +48,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               {/* Admin */}
               <Route path="/admin"            element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
-              <Route path="/admin/requests"   element={<RequireRole role="admin"><MemberRequests /></RequireRole>} />
-              <Route path="/admin/members"    element={<RequireRole role="admin"><MemberRequests /></RequireRole>} />
+              <Route path="/admin/members"    element={<RequireRole role="admin"><Members /></RequireRole>} />
               <Route path="/admin/attendance" element={<RequireRole role="admin"><AttendanceAdmin /></RequireRole>} />
 
               {/* Trainer */}

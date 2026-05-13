@@ -12,10 +12,10 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4"
       style={{ background: 'rgba(0,0,0,0.88)' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={`w-full ${sizes[size]} animate-fade-in`}
+      <div className={`w-full ${sizes[size]} animate-fade-in my-auto`}
         style={{ background: 'var(--s1)', border: '2px solid var(--b2)' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4"

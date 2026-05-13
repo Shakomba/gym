@@ -9,6 +9,24 @@ import {
 
 const STEPS = ['01 Account', '02 Personal', '03 Health', '04 Review']
 
+function Field({ label, icon: Icon, ...props }) {
+  return (
+    <div>
+      <label className="block text-xs font-600 uppercase tracking-wider mb-1.5"
+        style={{ fontFamily: 'var(--font-mono)', color: 'var(--t3)' }}>
+        {label}
+      </label>
+      <div className="relative">
+        {Icon && (
+          <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--t3)' }} />
+        )}
+        <input {...props} className={`input-base w-full ${Icon ? 'pl-9' : ''}`} />
+      </div>
+    </div>
+  )
+}
+
 export default function Register() {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -89,22 +107,6 @@ export default function Register() {
       </div>
     )
   }
-
-  const Field = ({ label, icon: Icon, ...props }) => (
-    <div>
-      <label className="block text-xs font-600 uppercase tracking-wider mb-1.5"
-        style={{ fontFamily: 'var(--font-mono)', color: 'var(--t3)' }}>
-        {label}
-      </label>
-      <div className="relative">
-        {Icon && (
-          <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: 'var(--t3)' }} />
-        )}
-        <input {...props} className={`input-base w-full ${Icon ? 'pl-9' : ''}`} />
-      </div>
-    </div>
-  )
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'var(--bg)' }}>

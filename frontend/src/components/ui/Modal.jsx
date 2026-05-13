@@ -14,7 +14,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto"
       style={{ background: 'rgba(0,0,0,0.88)' }}>
-      <div className="flex min-h-full items-center justify-center p-4"
+      <div className="flex min-h-screen items-center justify-center p-4"
         onClick={e => e.target === e.currentTarget && onClose()}>
         <div className={`w-full ${sizes[size]} animate-fade-in`}
           style={{ background: 'var(--s1)', border: '2px solid var(--b2)' }}>

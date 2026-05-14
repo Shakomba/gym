@@ -20,7 +20,7 @@ export default function TrainerMembers() {
     <div className="space-y-8 animate-fade-in">
       <div style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div className="section-label mb-1">Trainer</div>
-        <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>My Members</h1>
+        <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>My Members</h1>
       </div>
 
       <div className="relative max-w-xs">

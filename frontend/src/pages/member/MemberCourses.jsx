@@ -24,7 +24,7 @@ export default function MemberCourses() {
     <div className="space-y-8 animate-fade-in">
       <div style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div className="section-label mb-1">Member</div>
-        <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>My Courses</h1>
+        <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>My Courses</h1>
       </div>
 
       {loading

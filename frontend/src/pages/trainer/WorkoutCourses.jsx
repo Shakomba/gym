@@ -155,7 +155,7 @@ export default function WorkoutCourses() {
       <div className="flex items-end justify-between" style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div>
           <div className="section-label mb-1">Trainer</div>
-          <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Courses</h1>
+          <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Courses</h1>
         </div>
         <button onClick={() => setShowCreate(true)} className="btn-primary"><Plus size={14} /> New</button>
       </div>
@@ -208,7 +208,7 @@ export default function WorkoutCourses() {
                             ? <p className="py-3 text-xs" style={{ color: 'var(--t3)' }}>No exercises</p>
                             : <div className="mt-3 space-y-px">
                                 <div className="section-label mb-2">Exercise Plan</div>
-                                <table className="table-base">
+                                <div className="overflow-x-auto"><table className="table-base">
                                   <thead><tr><th>Exercise</th><th>Machine</th><th>Sets × Reps</th><th>Weight</th><th>Frequency</th></tr></thead>
                                   <tbody>
                                     {d.exercises.map(ex => (
@@ -221,7 +221,7 @@ export default function WorkoutCourses() {
                                       </tr>
                                     ))}
                                   </tbody>
-                                </table>
+                                </table></div>
                               </div>
                         }
                       </div>
@@ -235,7 +235,7 @@ export default function WorkoutCourses() {
       {/* ── Create Modal ── */}
       <Modal open={showCreate} onClose={() => { setShowCreate(false); setForm(EF) }} title="New Workout Course" size="lg">
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="section-label mb-1.5">Member *</label>
               <select value={form.memberID} onChange={e => setForm(f=>({...f,memberID:e.target.value}))} className="input-base text-sm">
@@ -280,8 +280,8 @@ export default function WorkoutCourses() {
       <Modal open={!!editCourse} onClose={() => setEditCourse(null)} title="Edit Course" size="lg">
         {editCourse && (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
                 <label className="section-label mb-1.5">Course Name *</label>
                 <input type="text" value={editCourse.courseName}
                   onChange={e => setEditCourse(ec=>({...ec,courseName:e.target.value}))}
@@ -341,7 +341,7 @@ export default function WorkoutCourses() {
             {/* Add exercise to existing course */}
             <div style={{ borderTop: '1px solid var(--b1)', paddingTop: 16 }}>
               <div className="section-label mb-3">Add Exercise</div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="section-label mb-1">Machine</label>
                   <select value={editExForm.machineID} onChange={e=>setEditExForm(f=>({...f,machineID:e.target.value}))} className="input-base text-xs">

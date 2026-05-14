@@ -53,14 +53,14 @@ export default function AttendanceAdmin() {
     <div className="space-y-8 animate-fade-in">
       <div style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div className="section-label mb-1">Admin</div>
-        <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Attendance</h1>
+        <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Attendance</h1>
       </div>
 
       {/* Manual check-in */}
       <div className="p-5" style={{ border: '1px solid var(--b1)', background: 'var(--s1)' }}>
         <div className="section-label mb-3">Manual Check-In</div>
-        <div className="flex gap-3 items-end">
-          <div className="flex-1 max-w-sm">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1 sm:max-w-sm">
             <label className="section-label mb-1.5">Select Member</label>
             <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className="input-base text-sm">
               <option value="">— Active members —</option>
@@ -81,14 +81,14 @@ export default function AttendanceAdmin() {
             <div className="relative">
               <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color:'var(--t3)' }} />
               <input type="text" placeholder="Filter…" value={search} onChange={e => setSearch(e.target.value)}
-                className="input-base pl-8 text-xs" style={{ width: 180 }} />
+                className="input-base pl-8 text-xs w-36 sm:w-44" />
             </div>
             <button onClick={load} className="btn-secondary px-3 py-2"><RefreshCw size={12} /></button>
           </div>
         </div>
         {loading
           ? <div className="p-8 text-center text-sm" style={{ color:'var(--t3)' }}>Loading…</div>
-          : <table className="table-base">
+          : <div className="overflow-x-auto"><table className="table-base">
               <thead><tr><th>Member</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Method</th><th></th></tr></thead>
               <tbody>
                 {filtered.slice(0,50).map(r => {
@@ -135,7 +135,7 @@ export default function AttendanceAdmin() {
                   )
                 })}
               </tbody>
-            </table>
+            </table></div>
         }
       </div>
     </div>

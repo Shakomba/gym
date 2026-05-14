@@ -29,7 +29,7 @@ export default function TrainerDashboard() {
       <div className="flex items-end justify-between" style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div>
           <div className="section-label mb-1">Trainer Portal</div>
-          <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>
             {user.name.split(' ')[0]}
           </h1>
         </div>
@@ -39,14 +39,13 @@ export default function TrainerDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3" style={{ border: '1px solid var(--b1)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: 'var(--b1)', border: '1px solid var(--b1)' }}>
         {[
           ['Members', stats?.memberCount ?? 0, 'Active assigned'],
           ['Active Courses', stats?.activeCourses ?? 0, 'Running programs'],
           ['Total', stats?.totalCourses ?? 0, 'All courses'],
-        ].map(([label, val, sub], i) => (
-          <div key={label} className="p-6"
-            style={{ borderRight: i < 2 ? '1px solid var(--b1)' : 'none' }}>
+        ].map(([label, val, sub]) => (
+          <div key={label} className="p-6" style={{ background: 'var(--bg)' }}>
             <div className="rule-heavy" style={{ height: 2 }} />
             <span className="section-label mt-3 block">{label}</span>
             <div className="text-[3.5rem] leading-none font-900 mt-1"

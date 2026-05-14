@@ -33,7 +33,7 @@ export default function MemberDashboard() {
       <div className="flex items-end justify-between" style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div>
           <div className="section-label mb-1">Member Portal</div>
-          <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>
             {user.name.split(' ')[0]}
           </h1>
         </div>
@@ -51,8 +51,8 @@ export default function MemberDashboard() {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-3" style={{ border: '1px solid var(--b1)' }}>
-        <div className="p-5" style={{ borderRight: '1px solid var(--b1)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: 'var(--b1)', border: '1px solid var(--b1)' }}>
+        <div className="p-5" style={{ background: 'var(--bg)' }}>
           <div className="section-label mb-2">Trainer</div>
           <div className="text-base font-700 uppercase" style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
             {profile?.TrainerName || 'None'}
@@ -63,13 +63,13 @@ export default function MemberDashboard() {
             </div>
           )}
         </div>
-        <div className="p-5" style={{ borderRight: '1px solid var(--b1)' }}>
+        <div className="p-5" style={{ background: 'var(--bg)' }}>
           <div className="section-label mb-2">Active Courses</div>
           <div className="text-[3rem] leading-none font-900" style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
             {courses.filter(c => c.IsActive).length}
           </div>
         </div>
-        <div className="p-5">
+        <div className="p-5" style={{ background: 'var(--bg)' }}>
           <div className="section-label mb-2">Last Visit</div>
           <div className="text-sm font-700 uppercase" style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
             {attendance[0]
@@ -83,15 +83,14 @@ export default function MemberDashboard() {
       {profile && (
         <div>
           <div className="section-label mb-4">Body Metrics</div>
-          <div className="grid grid-cols-4 gap-px" style={{ border: '1px solid var(--b1)' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'var(--b1)', border: '1px solid var(--b1)' }}>
             {[
               ['Weight', profile.Weight ? profile.Weight + ' kg' : '—'],
               ['Height', profile.Height ? profile.Height + ' cm' : '—'],
               ['Gender', profile.Gender || '—'],
               ['Goal', profile.FitnessGoal || '—'],
-            ].map(([label, val], i) => (
-              <div key={label} className="p-4"
-                style={{ borderRight: i < 3 ? '1px solid var(--b1)' : 'none' }}>
+            ].map(([label, val]) => (
+              <div key={label} className="p-4" style={{ background: 'var(--bg)' }}>
                 <div className="section-label mb-1">{label}</div>
                 <div className="text-sm font-600 truncate" style={{ color: 'var(--t1)' }}>{val}</div>
               </div>

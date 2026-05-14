@@ -103,7 +103,7 @@ export default function Machines() {
       <div className="flex items-end justify-between" style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div>
           <div className="section-label mb-1">Inventory</div>
-          <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Machines</h1>
+          <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Machines</h1>
         </div>
         {isAdmin && (
           <button onClick={() => { setForm(EMPTY); setEditM(null); setShowAdd(true) }} className="btn-primary">
@@ -243,7 +243,7 @@ export default function Machines() {
       <Modal open={showAdd} onClose={() => { setShowAdd(false); setEditM(null); setForm(EMPTY) }}
         title={editM ? 'Edit Machine' : 'Add Machine'} size="md">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[['Machine Name *', 'machineName', 'Treadmill Pro'], ['Type *', 'machineType', 'Treadmill'], ['Serial # *', 'serialNumber', 'TM-001'], ['Manufacturer', 'manufacturer', 'LifeFitness']].map(([lbl,k,ph]) => (
               <div key={k}>
                 <label className="section-label mb-1.5">{lbl}</label>

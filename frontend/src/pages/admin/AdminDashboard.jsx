@@ -31,22 +31,21 @@ export default function AdminDashboard() {
       {/* Header */}
       <div style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div className="section-label mb-1">Admin / Overview</div>
-        <h1 className="text-5xl font-900 uppercase"
+        <h1 className="text-4xl md:text-5xl font-900 uppercase"
           style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
           {user.name.split(' ')[0]}
         </h1>
       </div>
 
-      {/* Stats grid — no gaps, flush borders */}
-      <div className="grid grid-cols-2 lg:grid-cols-4" style={{ border: '1px solid var(--b1)' }}>
+      {/* Stats grid — gap-px creates dividers at any column count */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: 'var(--b1)', border: '1px solid var(--b1)' }}>
         {[
           ['Pending', stats?.pendingCount ?? 0, 'Awaiting review'],
           ['Active', stats?.activeCount ?? 0, 'Enrolled'],
           ['Trainers', stats?.trainerCount ?? 0, 'On staff'],
           ['Today', stats?.todayAttendance ?? 0, 'Check-ins'],
-        ].map(([label, val, sub], i) => (
-          <div key={label} className="p-6 flex flex-col gap-2"
-            style={{ borderRight: i < 3 ? '1px solid var(--b1)' : 'none' }}>
+        ].map(([label, val, sub]) => (
+          <div key={label} className="p-6 flex flex-col gap-2" style={{ background: 'var(--bg)' }}>
             <div className="rule-heavy" style={{ height: 2 }} />
             <span className="section-label mt-3">{label}</span>
             <div className="text-[3.5rem] leading-none font-900"
@@ -76,7 +75,7 @@ export default function AdminDashboard() {
           </div>
           {requests.length === 0
             ? <div className="px-6 py-10 text-sm text-center" style={{ color: 'var(--t3)' }}>Queue empty</div>
-            : <table className="table-base">
+            : <div className="overflow-x-auto"><table className="table-base">
                 <thead><tr><th>Name</th><th>Goal</th><th>Date</th><th>Status</th></tr></thead>
                 <tbody>
                   {requests.map(r => (
@@ -93,7 +92,7 @@ export default function AdminDashboard() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
           }
         </div>
 
@@ -121,15 +120,15 @@ export default function AdminDashboard() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-2 gap-px" style={{ border: '1px solid var(--b1)' }}>
-        <div className="p-6" style={{ borderRight: '1px solid var(--b1)' }}>
+      <div className="grid grid-cols-2 gap-px" style={{ background: 'var(--b1)', border: '1px solid var(--b1)' }}>
+        <div className="p-6" style={{ background: 'var(--bg)' }}>
           <div className="section-label mb-2">Inventory</div>
           <div className="text-[3rem] font-900" style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
             {stats?.machineCount ?? 0}
           </div>
           <div className="text-xs mt-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--t3)' }}>Gym machines</div>
         </div>
-        <div className="p-6">
+        <div className="p-6" style={{ background: 'var(--bg)' }}>
           <div className="section-label mb-2">Total Members</div>
           <div className="text-[3rem] font-900" style={{ fontFamily: 'var(--font-display)', color: 'var(--t1)' }}>
             {stats?.totalMembers ?? 0}

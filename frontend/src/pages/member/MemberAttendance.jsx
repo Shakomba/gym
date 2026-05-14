@@ -19,7 +19,7 @@ export default function MemberAttendance() {
     <div className="space-y-8 animate-fade-in">
       <div style={{ borderBottom: '2px solid var(--t1)', paddingBottom: 16 }}>
         <div className="section-label mb-1">Member</div>
-        <h1 className="text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Attendance</h1>
+        <h1 className="text-4xl md:text-5xl font-900 uppercase" style={{ fontFamily: 'var(--font-display)' }}>Attendance</h1>
       </div>
 
       <div style={{ border: '1px solid var(--b1)' }}>
@@ -34,7 +34,7 @@ export default function MemberAttendance() {
           ? <div className="p-8 text-center text-sm" style={{ color:'var(--t3)' }}>Loading…</div>
           : records.length === 0
             ? <div className="p-8 text-center text-sm" style={{ color:'var(--t3)' }}>No visits yet</div>
-            : <table className="table-base">
+            : <div className="overflow-x-auto"><table className="table-base">
                 <thead><tr><th>#</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Method</th></tr></thead>
                 <tbody>
                   {records.map((a, i) => (
@@ -62,7 +62,7 @@ export default function MemberAttendance() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
         }
       </div>
     </div>
